@@ -1,5 +1,5 @@
-from modules.parser import parse
-from modules.coder import Translator
+from parser import parse
+from coder import Translator
 
 import sys
 
@@ -16,8 +16,6 @@ def main(rom_name):
 
     with open(f"{rom_name}.asm", 'r') as rom:
         instructions = rom.readlines()
-        for instruction in instructions:
-            instruction.strip()
 
     parsed_instructions = parse(instructions)
     binary_instructions = []
@@ -39,4 +37,6 @@ if __name__ == "__main__":
         sys.exit(1)
 
     input_file = sys.argv[1]
-    main(input_file)
+    rom_name = input_file.replace('.asm', '')
+
+    main(rom_name)

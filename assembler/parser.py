@@ -1,15 +1,15 @@
-def parse(instructions):
+def parse(instructions: list[str]):
     """Parses a list of assembly instructions into their components."""
     decomposed_instructions = []
     i = 0
 
     for instruction in instructions:
         instruction = instruction.replace(" ", "").strip()
-        
+
         # Skip empty lines and comments
         if not instruction or instruction.startswith("//"):
             continue
-        
+
         # Remove inline comments
         instruction = instruction.split("//")[0]
 
@@ -20,8 +20,7 @@ def parse(instructions):
             continue
 
         i += 1
-        
-    
+
     for instruction in instructions:
         instruction = instruction.replace(" ", "").strip()
 
@@ -30,10 +29,9 @@ def parse(instructions):
             continue
 
         instruction = instruction.split("//")[0]
-        
+
         if instruction[0] == "(":
             continue
-
 
         # A-instruction
         elif instruction[0] == "@":
@@ -51,10 +49,11 @@ def parse(instructions):
                 comp = rest
             else:
                 rest = instruction
-            
+
             if ";" in rest:
                 comp, jmp = rest.split(";")
 
-            decomposed_instructions.append([dest, comp, jmp.upper() if jmp != "null" else jmp])
+            decomposed_instructions.append(
+                [dest, comp, jmp.upper() if jmp != "null" else jmp])
 
     return decomposed_instructions

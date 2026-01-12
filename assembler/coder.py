@@ -1,4 +1,4 @@
-from .constants import (
+from constants import (
     A_INSTRUCTION_PREFIX, A_INSTRUCTION_BITS, C_INSTRUCTION_PREFIX,
     PREDEFINED_SYMBOLS, VARIABLE_START_ADDRESS,
     DEST_MAP, COMP_MAP, JUMP_MAP,
@@ -10,11 +10,11 @@ class Translator:
         self.symbols_table = PREDEFINED_SYMBOLS.copy()
         self.num_vars = VARIABLE_START_ADDRESS
 
-    def translate_label(self, line, symbol):
+    def translate_label(self, line: int, symbol: str) -> None:
         """Add label to the symbols table."""
         self.symbols_table[symbol] = line
 
-    def translate_a_instruction(self, value_str):
+    def translate_a_instruction(self, value_str: str) -> str:
         """Translate A-instruction to 16-bit binary."""
         if value_str in self.symbols_table:
             value = self.symbols_table[value_str]
@@ -29,7 +29,7 @@ class Translator:
         binary = bin(value)[2:]
         return A_INSTRUCTION_PREFIX + binary.zfill(A_INSTRUCTION_BITS)
 
-    def translate_c_instruction(self, dest, comp, jump):
+    def translate_c_instruction(self, dest: str, comp: str, jump: str) -> str:
         """Translate C-instruction to 16-bit binary."""
 
         return (C_INSTRUCTION_PREFIX +
@@ -37,7 +37,7 @@ class Translator:
                 DEST_MAP[dest] +
                 JUMP_MAP[jump])
 
-    def translate_to_binary(self, instruction_components):
+    def translate_to_binary(self, instruction_components: list[str]) -> str:
         """
         Translate parsed instruction to 16-bit binary.
 
