@@ -1,0 +1,136 @@
+/** Screen drawing library.
+    The Hack screen is 512 x 256 pixels, memory-mapped at 16384. */
+class Screen {
+    static boolean color;  // current drawing color
+    static Array twoToThe;
+
+    /** Initializes the Screen. */
+    function void init() {
+        var int i, val;
+        let color = true;  // black
+        let twoToThe = Array.new(16);
+        let val = 1;
+        let i = 0;
+        while (i < 16) {
+            let twoToThe[i] = val;
+            let val = val + val;
+            let i = i + 1;
+        }
+        return;
+    }
+
+    /** Erases the entire screen. */
+    function void clearScreen() {
+        var int i;
+        let i = 16384;
+        while (i < 24576) {
+            do Memory.poke(i, 0);
+            let i = i + 1;
+        }
+        return;
+    }
+
+    /** Sets the current drawing color (true=black, false=white). */
+    function void setColor(boolean b) {
+        let color = b;
+        return;
+    }
+
+    /** Draws a pixel at (x, y). */
+    function void drawPixel(int x, int y) {
+        var int address, mask, value;
+        let address = 16384 + (y * 32) + (x / 16);
+        let mask = twoToThe[x & 15];
+        let value = Memory.peek(address);
+
+        if (color) {
+            let value = value | mask;
+        } else {
+            let value = value & (~mask);
+        }
+        do Memory.poke(address, value);
+        return;
+    }
+
+    /** Draws a horizontal line from (x1, y) to (x2, y). */
+    function void drawHLine(int x1, int x2, int y) {
+        var int temp;
+        if (x1 > x2) {
+            let temp = x1;
+            let x1 = x2;
+            let x2 = temp;
+        }
+        while (~(x1 > x2)) {
+            do Screen.drawPixel(x1, y);
+            let x1 = x1 + 1;
+        }
+        return;
+    }
+
+    /** Draws a line from (x1, y1) to (x2, y2). */
+    function void drawLine(int x1, int y1, int x2, int y2) {
+        var int dx, dy, a, b, diff, stepX, stepY;
+
+        if (y1 = y2) {
+            do Screen.drawHLine(x1, x2, y1);
+            return;
+        }
+
+        if (x1 = x2) {
+            // vertical line
+            if (y1 > y2) {
+                let a = y1; let y1 = y2; let y2 = a;
+            }
+            while (~(y1 > y2)) {
+                do Screen.drawPixel(x1, y1);
+                let y1 = y1 + 1;
+            }
+            return;
+        }
+
+        // General Bresenham-style line
+        let dx = Math.abs(x2 - x1);
+        let dy = Math.abs(y2 - y1);
+        if (x1 < x2) { let stepX = 1; } else { let stepX = -1; }
+        if (y1 < y2) { let stepY = 1; } else { let stepY = -1; }
+
+        let a = 0;
+        let b = 0;
+        let diff = 0;
+
+        while (~(a > dx) & ~(b > dy)) {
+            do Screen.drawPixel(x1 + (a * stepX), y1 + (b * stepY));
+            if (diff < 0) {
+                let a = a + 1;
+                let diff = diff + dy;
+            } else {
+                let b = b + 1;
+                let diff = diff - dx;
+            }
+        }
+        return;
+    }
+
+    /** Draws a filled rectangle from (x1, y1) to (x2, y2). */
+    function void drawRectangle(int x1, int y1, int x2, int y2) {
+        while (~(y1 > y2)) {
+            do Screen.drawHLine(x1, x2, y1);
+            let y1 = y1 + 1;
+        }
+        return;
+    }
+
+    /** Draws a circle centered at (x, y) with the given radius. */
+    function void drawCircle(int x, int y, int r) {
+        var int dy, rSq, dySq, halfWidth;
+        let dy = -r;
+        let rSq = r * r;
+        while (~(dy > r)) {
+            let dySq = dy * dy;
+            let halfWidth = Math.sqrt(rSq - dySq);
+            do Screen.drawHLine(x - halfWidth, x + halfWidth, y + dy);
+            let dy = dy + 1;
+        }
+        return;
+    }
+}

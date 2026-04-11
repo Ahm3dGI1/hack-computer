@@ -1,0 +1,111 @@
+/** Mathematical operations library. */
+class Math {
+    static Array twoToThe;  // powers of 2
+
+    /** Initializes the library. */
+    function void init() {
+        var int i, val;
+        let twoToThe = Array.new(16);
+        let val = 1;
+        let i = 0;
+        while (i < 16) {
+            let twoToThe[i] = val;
+            let val = val + val;
+            let i = i + 1;
+        }
+        return;
+    }
+
+    /** Returns true if the j-th bit of x is 1. */
+    function boolean bit(int x, int j) {
+        return ~((x & twoToThe[j]) = 0);
+    }
+
+    /** Returns x * y using shift-and-add. */
+    function int multiply(int x, int y) {
+        var int sum, shiftedX, i;
+        let sum = 0;
+        let shiftedX = x;
+        let i = 0;
+        while (i < 16) {
+            if (Math.bit(y, i)) {
+                let sum = sum + shiftedX;
+            }
+            let shiftedX = shiftedX + shiftedX;
+            let i = i + 1;
+        }
+        return sum;
+    }
+
+    /** Returns x / y (integer division). */
+    function int divide(int x, int y) {
+        var int result;
+        var boolean neg;
+
+        if (y = 0) {
+            do Sys.error(3);  // division by zero
+            return 0;
+        }
+
+        let neg = ((x < 0) = (y < 0));
+        let neg = ~neg;  // neg is true if signs differ
+
+        if (x < 0) { let x = -x; }
+        if (y < 0) { let y = -y; }
+
+        let result = Math.dividePositive(x, y);
+
+        if (neg) {
+            return -result;
+        }
+        return result;
+    }
+
+    /** Helper: divides two positive integers. */
+    function int dividePositive(int x, int y) {
+        var int q;
+        if ((y > x) | (y < 0)) {
+            return 0;
+        }
+        let q = Math.dividePositive(x, y + y);
+        if ((x - (q * (y + y))) < y) {
+            return q + q;
+        } else {
+            return q + q + 1;
+        }
+    }
+
+    /** Returns the integer square root of x. */
+    function int sqrt(int x) {
+        var int y, j, temp, tempSq;
+        let y = 0;
+        let j = 7;  // (16/2) - 1
+        while (~(j < 0)) {
+            let temp = y + twoToThe[j];
+            let tempSq = temp * temp;
+            if (~(tempSq > x) & (tempSq > 0)) {
+                let y = temp;
+            }
+            let j = j - 1;
+        }
+        return y;
+    }
+
+    /** Returns the greater of a and b. */
+    function int max(int a, int b) {
+        if (a > b) { return a; }
+        return b;
+    }
+
+    /** Returns the lesser of a and b. */
+    function int min(int a, int b) {
+        if (a < b) { return a; }
+        return b;
+    }
+
+    /** Returns the absolute value of x. */
+    function int abs(int x) {
+        if (x < 0) { return -x; }
+        return x;
+    }
+}

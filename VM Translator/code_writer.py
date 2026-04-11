@@ -5,10 +5,18 @@ class CodeWriter:
     def __init__(self):
         self.label_counter = 0
         self.current_file = ""
+        self.current_function = ""
 
     def set_file_name(self, file_name):
         """Set the base file name, used to generate unique static segment labels."""
         self.current_file = file_name
+
+    def write_bootstrap(self):
+        """Emit bootstrap code: SP=256, call Sys.init."""
+        return "\n".join([
+            self._asm("@256", "D=A", "@SP", "M=D"),
+            self._write_call("Sys.init", 0),
+        ])
 
     # -------------------------------------------------------------------------
     # Public dispatch
@@ -187,17 +195,25 @@ class CodeWriter:
     # Program flow
     # -------------------------------------------------------------------------
 
+    def _scoped_label(self, label):
+        """Return function-scoped label: functionName$label."""
+        if self.current_function:
+            return f"{self.current_function}${label}"
+        return label
+
     def _write_label(self, label):
-        return f"({label})"
+        return f"({self._scoped_label(label)})"
 
     def _write_goto(self, label):
-        return self._asm(f"@{label}", "0;JMP")
+        scoped = self._scoped_label(label)
+        return self._asm(f"@{scoped}", "0;JMP")
 
     def _write_if(self, label):
         """Pop top of stack; jump to label if value != 0."""
+        scoped = self._scoped_label(label)
         return self._asm(
             "@SP", "M=M-1", "A=M", "D=M",
-            f"@{label}", "D;JNE",
+            f"@{scoped}", "D;JNE",
         )
 
     # -------------------------------------------------------------------------
@@ -206,6 +222,7 @@ class CodeWriter:
 
     def _write_function(self, function_name, n_locals):
         """Emit function entry label and initialize all local variables to 0."""
+        self.current_function = function_name
         local_init = self._asm("@SP", "A=M", "M=0", "@SP", "M=M+1")
         return "\n".join(
             [f"({function_name})"] + [local_init] * n_locals

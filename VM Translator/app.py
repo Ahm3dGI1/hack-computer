@@ -5,36 +5,53 @@ from parser import Parser
 from code_writer import CodeWriter
 
 
-def translate(vm_file):
+def translate_file(vm_file, writer):
+    """Translate a single .vm file, returning assembly lines."""
     file_name = os.path.splitext(os.path.basename(vm_file))[0]
-    output_file = os.path.splitext(vm_file)[0] + ".asm"
-
-    parser = Parser()
-    writer = CodeWriter()
     writer.set_file_name(file_name)
 
+    parser = Parser()
     commands = parser.parse_file(vm_file)
-    assembly = [writer.write_assembly(cmd) for cmd in commands]
+    return [writer.write_assembly(cmd) for cmd in commands]
+
+
+def main(input_path):
+    writer = CodeWriter()
+
+    if os.path.isdir(input_path):
+        vm_files = sorted(
+            os.path.join(input_path, f)
+            for f in os.listdir(input_path)
+            if f.endswith(".vm")
+        )
+        if not vm_files:
+            print(f"Error: no .vm files found in {input_path}")
+            sys.exit(1)
+
+        dir_name = os.path.basename(os.path.normpath(input_path))
+        output_file = os.path.join(input_path, f"{dir_name}.asm")
+
+        assembly = [writer.write_bootstrap()]
+        for vm_file in vm_files:
+            assembly.extend(translate_file(vm_file, writer))
+
+    elif os.path.isfile(input_path) and input_path.endswith(".vm"):
+        output_file = os.path.splitext(input_path)[0] + ".asm"
+        assembly = translate_file(input_path, writer)
+
+    else:
+        print("Error: input must be a .vm file or a directory containing .vm files")
+        sys.exit(1)
 
     with open(output_file, "w") as f:
-        f.write("".join(assembly) + "")
+        f.write("\n".join(assembly) + "\n")
 
-    print(f"Translated: {vm_file} -> {output_file}")
+    print(f"Translated -> {output_file}")
 
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
-        print("Usage: python app.py <file.vm>")
+        print("Usage: python app.py <file.vm | directory>")
         sys.exit(1)
 
-    input_file = sys.argv[1]
-
-    if not input_file.endswith(".vm"):
-        print("Error: input file must have a .vm extension")
-        sys.exit(1)
-
-    if not os.path.isfile(input_file):
-        print(f"Error: file not found: {input_file}")
-        sys.exit(1)
-
-    translate(input_file)
+    main(sys.argv[1])

@@ -1,0 +1,43 @@
+/** OS bootstrap and utility functions. */
+class Sys {
+    /** Calls Math.init, Memory.init, Screen.init, Output.init,
+        Keyboard.init, then Main.main, then halts. */
+    function void init() {
+        do Math.init();
+        do Memory.init();
+        do Screen.init();
+        do Output.init();
+        do Keyboard.init();
+        do Main.main();
+        do Sys.halt();
+        return;
+    }
+
+    /** Halts execution. */
+    function void halt() {
+        while (true) {}
+        return;
+    }
+
+    /** Waits approximately duration milliseconds. */
+    function void wait(int duration) {
+        var int i, j;
+        let i = 0;
+        while (i < duration) {
+            let j = 0;
+            while (j < 200) {
+                let j = j + 1;
+            }
+            let i = i + 1;
+        }
+        return;
+    }
+
+    /** Prints an error code and halts. */
+    function void error(int errorCode) {
+        do Output.printString("ERR");
+        do Output.printInt(errorCode);
+        do Sys.halt();
+        return;
+    }
+}

@@ -1,0 +1,133 @@
+/** The Snake game controller. */
+class SnakeGame {
+    field Snake snake;
+    field int dx, dy;        // current direction
+    field int foodX, foodY;  // food position
+    field int score;
+    field int size;          // segment size in pixels
+    field int seed;          // pseudo-random seed
+
+    constructor SnakeGame new() {
+        let size = 8;
+        let dx = 1;
+        let dy = 0;
+        let score = 0;
+        let seed = 12345;
+        let snake = Snake.new(128, 120, size);
+        do placeFood();
+        do drawBorder();
+        do printScore();
+        return this;
+    }
+
+    method void dispose() {
+        do snake.dispose();
+        do Memory.deAlloc(this);
+        return;
+    }
+
+    method void drawBorder() {
+        do Screen.setColor(true);
+        do Screen.drawRectangle(0, 0, 511, 1);     // top
+        do Screen.drawRectangle(0, 254, 511, 255);  // bottom
+        do Screen.drawRectangle(0, 0, 1, 255);      // left
+        do Screen.drawRectangle(510, 0, 511, 255);  // right
+        return;
+    }
+
+    method void printScore() {
+        do Output.moveCursor(0, 25);
+        do Output.printString("Score: ");
+        do Output.printInt(score);
+        return;
+    }
+
+    method void placeFood() {
+        // Simple pseudo-random placement on grid
+        let seed = seed + 12347;
+        let foodX = seed;
+        // Keep positive and within bounds
+        if (foodX < 0) { let foodX = -foodX; }
+        let foodX = foodX - ((foodX / 60) * 60);   // mod 60
+        let foodX = (foodX * size) + (size + size); // offset from border
+
+        let seed = seed + 7919;
+        let foodY = seed;
+        if (foodY < 0) { let foodY = -foodY; }
+        let foodY = foodY - ((foodY / 28) * 28);   // mod 28
+        let foodY = (foodY * size) + (size + size); // offset from border
+
+        // Clamp to screen bounds
+        if (foodX > (504 - size)) { let foodX = 200; }
+        if (foodY > (248 - size)) { let foodY = 120; }
+
+        // Draw food
+        do Screen.setColor(true);
+        do Screen.drawRectangle(foodX, foodY, foodX + size - 1, foodY + size - 1);
+        return;
+    }
+
+    method void run() {
+        var int key;
+        var boolean quit;
+        var boolean grow;
+
+        let quit = false;
+
+        while (~quit) {
+            let key = Keyboard.keyPressed();
+
+            // Arrow keys: up=131, down=133, left=130, right=132
+            if (key = 131) {
+                if (~(dy = 1)) { let dx = 0; let dy = -1; }
+            }
+            if (key = 133) {
+                if (~(dy = -1)) { let dx = 0; let dy = 1; }
+            }
+            if (key = 130) {
+                if (~(dx = 1)) { let dx = -1; let dy = 0; }
+            }
+            if (key = 132) {
+                if (~(dx = -1)) { let dx = 1; let dy = 0; }
+            }
+            if (key = 140) {  // ESC
+                let quit = true;
+            }
+
+            // Check if head will be on food
+            let grow = false;
+            if (((snake.headX() + (dx * size)) = foodX) &
+                ((snake.headY() + (dy * size)) = foodY)) {
+                let grow = true;
+                let score = score + 10;
+                do printScore();
+            }
+
+            do snake.move(dx, dy, grow);
+
+            if (grow) {
+                do placeFood();
+            }
+
+            // Check wall collision
+            if ((snake.headX() < 2) | (snake.headX() > (508 - size))) {
+                let quit = true;
+            }
+            if ((snake.headY() < 2) | (snake.headY() > (252 - size))) {
+                let quit = true;
+            }
+
+            // Check self collision
+            if (snake.collidesWithSelf()) {
+                let quit = true;
+            }
+
+            do Sys.wait(100);
+        }
+
+        // Game over
+        do Output.moveCursor(11, 22);
+        do Output.printString("GAME OVER");
+        return;
+    }
+}

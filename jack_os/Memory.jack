@@ -1,0 +1,80 @@
+/** Memory operations library with heap management. */
+class Memory {
+    static Array ram;
+    static Array heap;
+    static int freeList;
+
+    /** Initializes the memory module. */
+    function void init() {
+        let ram = 0;          // base of RAM
+        let heap = 2048;      // heap starts at 2048
+        let freeList = 2048;
+        // Free block format: [size, next]
+        let heap[0] = 14334;  // 16384 - 2048 - 2 (header)
+        let heap[1] = 0;      // null (no next block)
+        return;
+    }
+
+    /** Returns the value at RAM[address]. */
+    function int peek(int address) {
+        return ram[address];
+    }
+
+    /** Sets RAM[address] to value. */
+    function void poke(int address, int value) {
+        let ram[address] = value;
+        return;
+    }
+
+    /** Allocates a block of the given size and returns its base address. */
+    function int alloc(int size) {
+        var int current, prev, block, blockSize, remaining;
+
+        let current = freeList;
+        let prev = 0;
+
+        // First-fit search
+        while (~(current = 0)) {
+            let blockSize = ram[current];
+
+            if (~(blockSize < (size + 2))) {
+                // Block is large enough
+                if (blockSize > (size + 4)) {
+                    // Split: carve from end of block
+                    let remaining = blockSize - size - 2;
+                    let ram[current] = remaining;
+
+                    let block = current + remaining + 2;
+                    let ram[block] = size;
+                    let ram[block + 1] = 0;
+                    return block + 2;
+                } else {
+                    // Use entire block
+                    if (prev = 0) {
+                        let freeList = ram[current + 1];
+                    } else {
+                        let ram[prev + 1] = ram[current + 1];
+                    }
+                    return current + 2;
+                }
+            }
+
+            let prev = current;
+            let current = ram[current + 1];
+        }
+
+        // Out of memory
+        do Sys.error(6);
+        return 0;
+    }
+
+    /** De-allocates the given object (block must start at object - 2). */
+    function void deAlloc(Array o) {
+        var int block;
+        let block = o - 2;
+        // Prepend to free list
+        let ram[block + 1] = freeList;
+        let freeList = block;
+        return;
+    }
+}
