@@ -33,7 +33,7 @@ def main(rom_name):
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print("Usage: python assembler.py <file.asm>")
+        print("Usage: python app.py <file.asm>")
         sys.exit(1)
 
     input_file = sys.argv[1]
